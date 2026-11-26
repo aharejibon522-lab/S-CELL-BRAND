@@ -97,7 +97,7 @@ export function policies(c) {
       subtitle: 'A card you can check in seconds, a fake that fails every time.',
       summary: 'How S/CELL proves a card is genuine.',
       sections: [
-        { h: 'Every card has an identity', items: ['A card ID engraved on the card, for example ARJO-07-4F2A.', 'An NFC chip (NTAG424 DNA) that produces a fresh cryptographic code on every tap, so a copied chip fails.', 'A record in the S/CELL registry created before the card leaves the workshop, with its number, chip ID, inspection result and photograph.'] },
+        { h: 'Every card has an identity', items: ['A card ID engraved on the card, for example SHAY-07-4F2A.', 'An NFC chip (NTAG424 DNA) that produces a fresh cryptographic code on every tap, so a copied chip fails.', 'A record in the S/CELL registry created before the card leaves the workshop, with its number, chip ID, inspection result and photograph.'] },
         { h: 'How to verify', items: ['Tap the card with a phone, or enter its card ID on the Verify page.', 'The result shows whether the card is genuine, its artist and number, its registered owner, its status and its number of official trades.', 'Before paying for a card offered outside S/CELL, always verify it and check that the seller is its registered owner.'] },
         { h: 'The chip ID is private', p: ['Only the registered owner can see a card\'s chip ID. A buyer confirms the chip during an official resale. Owners should never share the chip ID with anyone who has not paid through S/CELL.'] },
         { h: 'Production audit', p: ['Every card is inspected and chip-tested before release. Any card that fails is destroyed and recorded as destroyed. No spare or duplicate cards are kept.'] },

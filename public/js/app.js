@@ -1,5 +1,6 @@
 import { esc, taka, pad2, date, dateTime, api, toast, plate, badges, formData, countdown, THEME_LABEL, STATUS_LABEL, BADGE_LABEL, setCardArt, cardImage } from './ui.js';
 import { mountShelf } from './shelf.js';
+import { renderBackground, mountBackgroundParallax } from './bg.js';
 import { mountLivingCard, mountMarquee, mountRevealText, mountStack, mountFadeIns, mountSparkField } from './fx.js';
 import { adminView } from './admin.js';
 import { guidesHub, guidePage, policiesIndex, policyPage, artistDashboard, sponsorDashboard } from './guides.js';
@@ -53,6 +54,7 @@ async function render() {
   state.cleanups = [];
   state.handlers = { submit: {}, click: {} };
   const path = location.pathname.replace(/\/+$/, '') || '/';
+  renderBackground(document.getElementById('bg-art'), path);
   document.querySelectorAll('.nav a').forEach((a) => {
     const href = a.getAttribute('href');
     a.toggleAttribute('aria-current', href !== '/' && path.startsWith(href));
@@ -184,7 +186,7 @@ async function home() {
       </div>
       <div class="hero-card">
         <div class="living" id="living">
-          ${plate({ ...SAMPLE, title: 'Words are rivers', body: 'They change the land they pass through.', artist: { name: 'Meghla Sultana', slug: 'meghla-sultana' } })}
+          ${plate({ ...SAMPLE, title: 'Where it began', body: 'A river town, then a port-city youth.', artist: { name: 'Shayan Rahi', slug: 'shayan-rahi' } })}
           <p class="living-hint">Grab the card and pull. Steel remembers its shape.</p>
         </div>
         <div class="structure" aria-label="How the 15 cards are divided">
@@ -245,6 +247,10 @@ async function home() {
     </div>
   </section>
 
+  ${(() => {
+    const camp = artists.filter((a) => PUBLIC_CAMPAIGN[a.slug]).map((a) => ({ ...a, series: 'Demo collection', tint: PUBLIC_CAMPAIGN[a.slug].tint, copy: PUBLIC_CAMPAIGN[a.slug] }));
+    return camp.length ? passionSection(camp, (a) => `/img/cards/${a.slug}/${a.copy.card}.webp`, 'Fictional demo artist, shown to explain how S/CELL works.', 'The artists in this campaign are fictional demo artists. Real artists approve every word of their own campaign.') : '';
+  })()}
   <section class="services" aria-labelledby="svc-h">
     <div class="wrap">
       <h2 class="big-head ink" id="svc-h" data-fade>How it works</h2>
@@ -334,8 +340,107 @@ async function home() {
   state.cleanups.push(mountRevealText(document.getElementById('reveal')));
   const stack = document.getElementById('stack');
   if (stack?.querySelector('.stack-item')) state.cleanups.push(mountStack(stack));
+  mountCalculator(document.getElementById('calc'), artists.filter((a) => PUBLIC_CAMPAIGN[a.slug]).map((a) => ({ ...a, tint: PUBLIC_CAMPAIGN[a.slug].tint })));
   state.cleanups.push(mountSparkField(document.getElementById('nightfield')));
   state.cleanups.push(mountFadeIns(main));
+}
+
+const AD_COPY = [
+  { en: 'Your bid pays James.', bn: 'তোমার বিড, জেমসের আয়।', card: '15' },
+  { en: 'Six strings. Fifteen cards. Your bid.', bn: 'ছয় তার, পনেরো কার্ড, তোমার বিড।', card: '14' },
+  { en: 'Since 1979. Now in steel.', bn: '১৯৭৯ থেকে, এবার ইস্পাতে।', card: '13' },
+];
+const DEFAULT_FOOT = 'Real earnings depend on bids.';
+function adCard(a, c, src, foot, i) {
+  return `<figure class="ad" data-fade style="--t1:${a.tint[0]};--t2:${a.tint[1]};--t3:${a.tint[2]};--d:${(i * 0.12).toFixed(2)}s">
+    <div class="ad-top"><span class="ad-mark">S<i>/</i>CELL</span><span>${esc(a.series || 'Founding Set')} · ${esc(a.name)}</span></div>
+    <img class="ad-card" src="${src}" alt="">
+    <div class="ad-copy">
+      <p class="ad-head">${esc(c.en)}</p>
+      <p class="ad-bn bnin">${esc(c.bn)}</p>
+      <p class="ad-stat"><b>৳1 lakh+</b><span>what passionate fans could earn ${esc(a.name)} in one season*</span></p>
+      <p class="ad-sub">20% of every winning bid and 13% of every resale go to the artist. <span class="bnin">প্রতিটি জয়ী বিডের ২০% আর প্রতিটি রিসেলের ১৩% যায় শিল্পীর কাছে।</span></p>
+    </div>
+    <figcaption class="ad-foot">*Example: 15 cards at an average winning bid of ৳18,000 (৳54,000 to the artist) plus 20 resales at ৳20,000 (৳52,000), ৳1,06,000 in total. ${esc(foot)}</figcaption>
+  </figure>`;
+}
+
+// Public campaign: the fictional demo artists, built on the Founding Set designs.
+const PUBLIC_CAMPAIGN = {
+  'shayan-rahi': { tint: ['#2a1838', '#5b3a86', '#9a6fc4'], en: 'Your bid pays Shayan.', bn: 'তোমার বিড, শায়ানের আয়।', card: '15' },
+  'tanim-sur': { tint: ['#101c2c', '#2e4f7a', '#7d9cc4'], en: 'Six strings. Fifteen cards. Your bid.', bn: 'ছয় তার, পনেরো কার্ড, তোমার বিড।', card: '14' },
+  'rumi-haque': { tint: ['#2b1a0c', '#8a5a2b', '#c99556'], en: 'Since 1983. Now in steel.', bn: '১৯৮৩ থেকে, এবার ইস্পাতে।', card: '13' },
+};
+function passionSection(artists, imgFor, foot, note) {
+  return `<section class="passion" id="passion" aria-labelledby="pa-h">
+    <div class="wrap">
+      <p class="kicker acc" data-fade>Campaign · প্রচারণা</p>
+      <h2 class="big-head ink" id="pa-h" data-fade>Your passion pays</h2>
+      <p class="passion-lede" data-fade>How much an artist earns is up to their fans. <span class="bnin">কত আয় হবে, তা ঠিক করবে তোমার ভালোবাসা।</span></p>
+      <div class="ads">${artists.map((a, i) => adCard(a, a.copy, imgFor(a), foot, i)).join('')}</div>
+      <p class="fine ads-note">${esc(note)}</p>
+      ${calculatorHtml(artists)}
+    </div>
+  </section>`;
+}
+function calculatorHtml(artists) {
+  return `<div class="calc" id="calc">
+        <div class="calc-in">
+          <h3>Fan passion calculator</h3>
+          <div class="calc-artists" role="radiogroup" aria-label="Artist">${artists.map((a, i) => `<button type="button" role="radio" aria-checked="${i === 0}" data-artist="${i}" style="--acc:${a.tint[2]}">${esc(a.name)}</button>`).join('')}</div>
+          <div class="calc-scen">${[['Modest', 5000, 10, 7000], ['Strong', 18000, 20, 20000], ['Fan frenzy', 30000, 35, 38000]].map(([n, b, r, p], i) => `<button type="button" class="chip" data-bid="${b}" data-res="${r}" data-rp="${p}" aria-pressed="${i === 1}">${n}</button>`).join('')}</div>
+          <label class="slider"><span>Average winning bid at S/CELL Night <b id="v-bid"></b></span><input type="range" id="c-bid" min="1500" max="60000" step="500" value="18000"></label>
+          <label class="slider"><span>Resales in the first year <b id="v-res"></b></span><input type="range" id="c-res" min="0" max="60" step="1" value="20"></label>
+          <label class="slider"><span>Average resale price <b id="v-rp"></b></span><input type="range" id="c-rp" min="1500" max="150000" step="500" value="20000"></label>
+          <label class="check"><input type="checkbox" id="c-adv"> The artist took an advance (18% of first sales, 12% of resales)</label>
+        </div>
+        <div class="calc-out" aria-live="polite">
+          <p class="calc-who" id="o-who"></p>
+          <p class="calc-total" id="o-total"></p>
+          <div class="calc-bar"><div class="calc-fill" id="o-fill"></div><span class="calc-lakh">৳1 lakh</span></div>
+          <dl class="calc-split">
+            <div><dt>S/CELL Night, all 15 cards</dt><dd id="o-first"></dd></div>
+            <div><dt>Resales</dt><dd id="o-resale"></dd></div>
+          </dl>
+          <p class="fine">An illustration of the S/CELL rules, not a forecast or a promise. Real earnings depend on what fans bid and how often cards trade. Auctions open at about ৳1,500.</p>
+        </div>
+      </div>`;
+}
+
+function mountCalculator(root, artists) {
+  if (!root) return;
+  const cfg = state.config || {};
+  const fs = cfg.firstSale || { artistPct: 20, artistPctWithAdvance: 18 };
+  const rs = cfg.resale || { tierBreak: 100000, low: { artist: 13 }, high: { artist: 10 }, advanceArtistReduction: 1 };
+  let who = 0;
+  const $ = (id) => root.querySelector('#' + id);
+  const calc = () => {
+    const bid = +$('c-bid').value, res = +$('c-res').value, rp = +$('c-rp').value, adv = $('c-adv').checked;
+    const firstPct = adv ? fs.artistPctWithAdvance : fs.artistPct;
+    const red = adv ? (rs.advanceArtistReduction || 1) : 0;
+    const resalePct = (rp > rs.tierBreak ? rs.high.artist : rs.low.artist) - red;
+    const first = 15 * bid * firstPct / 100, resale = res * rp * resalePct / 100, total = first + resale;
+    $('v-bid').textContent = taka(bid); $('v-res').textContent = String(res); $('v-rp').textContent = taka(rp);
+    $('o-who').textContent = `${artists[who].name} could earn`;
+    $('o-total').textContent = taka(Math.round(total));
+    $('o-first').textContent = `${taka(Math.round(first))} (${firstPct}%)`;
+    $('o-resale').textContent = `${taka(Math.round(resale))} (${resalePct}%)`;
+    $('o-fill').style.width = `${Math.min(100, total / 200000 * 100)}%`;
+    root.style.setProperty('--acc', artists[who].tint[2]);
+    root.classList.toggle('over-lakh', total >= 100000);
+  };
+  root.addEventListener('input', () => { root.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false')); calc(); });
+  root.querySelectorAll('[data-artist]').forEach((b) => b.addEventListener('click', () => {
+    who = +b.dataset.artist;
+    root.querySelectorAll('[data-artist]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+    calc();
+  }));
+  root.querySelectorAll('.chip').forEach((b) => b.addEventListener('click', () => {
+    $('c-bid').value = b.dataset.bid; $('c-res').value = b.dataset.res; $('c-rp').value = b.dataset.rp;
+    root.querySelectorAll('.chip').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    calc();
+  }));
+  calc();
 }
 
 function artCards(filter) {
@@ -442,6 +547,8 @@ async function conceptPage() {
         </article></div>`).join('')}</div>
     </div>
   </section>
+  ${passionSection(data.artists.map((a, i) => ({ ...a, copy: AD_COPY[i % AD_COPY.length] })), (a) => img(a.key, a.copy.card), 'Concept for discussion; not affiliated with or endorsed by the artist.', 'Ads are concepts for discussion with each artist and their management. They will not run until the artist signs and approves every word.')}
+
   <section class="nightfield" id="nightfield" aria-label="The Founding Set night">
     <canvas class="nf-canvas" aria-hidden="true"></canvas>
     <div class="nf-vignette" aria-hidden="true"></div>
@@ -486,6 +593,7 @@ async function conceptPage() {
   if (mq) state.cleanups.push(mountMarquee(mq));
   state.cleanups.push(mountRevealText(document.getElementById('reveal')));
   state.cleanups.push(mountStack(document.getElementById('stack')));
+  mountCalculator(document.getElementById('calc'), data.artists);
   state.cleanups.push(mountSparkField(document.getElementById('nightfield')));
   state.cleanups.push(mountFadeIns(main));
 }
@@ -799,7 +907,7 @@ async function verifyPage(code) {
     </div>
     <div class="wrap split">
       <form class="form" data-form="verify">
-        <label class="field"><span>Card ID or chip ID</span><input class="input" name="code" value="${esc(code || '')}" placeholder="For example ARJO-01-4F2A" required autocomplete="off"></label>
+        <label class="field"><span>Card ID or chip ID</span><input class="input" name="code" value="${esc(code || '')}" placeholder="For example SHAY-01-4F2A" required autocomplete="off"></label>
         <div><button class="btn" type="submit">Verify card</button></div>
       </form>
       <div id="verify-result" aria-live="polite"></div>
@@ -1076,6 +1184,7 @@ async function accountPage() {
 (async () => {
   try { state.config = await api('/api/config'); } catch { state.config = null; }
   setCardArt(state.config?.cardArt);
+  mountBackgroundParallax(document.getElementById('bg-art'));
   await refreshMe().catch(() => null);
   render();
 })();

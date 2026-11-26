@@ -4,48 +4,59 @@ import { hashPassword, now, DAY } from './security.js';
 // Creates the first admin account, and (unless SEED_DEMO=false) a set of clearly fictional demo artists and collectors
 // so every page of the site has something to show. Real artists are added from the admin panel.
 
-const ARJO = [
-  ['Play it like the room is listening', 'Every crowd is a small country. Treat it with respect.'],
-  ['Noise has its people', 'A loud song is only a quiet one that found its audience.'],
-  ['The borrowed guitar', 'My first chord was on a guitar I had to give back by evening.'],
-  ['Silence is part of the song', 'Leave room. The listener finishes the line.'],
-  ['Every stage starts on a rooftop', 'We rehearsed above the tea stall until the neighbours sang along.'],
-  ['Write fast, edit slow', 'The idea arrives in a minute. The song takes a year.'],
-  ['The mistake is the hook', 'Keep the wrong note if it makes you feel something.'],
-  ['Tune the guitar, not the truth', 'Change the key. Never change what the song means.'],
-  ['The first full house', 'The night the hall filled, I forgot the second verse. Nobody cared.'],
-  ['Twenty years, one street', 'Different stages, same people in the front row.'],
-  ['The rooftop', ''], ['Monsoon set', ''], ['The borrowed guitar', ''],
-  ['Front row', ''], ['Last encore', ''],
+// Fictional demo artists. Their card artwork lives in public/img/cards/<slug>/.
+const SHAYAN = [
+  ["Where it began", "A river town, then a port-city youth."],
+  ["Against the odds", "A family that hoped for another path."],
+  ["The first band", "Four friends and one borrowed amp."],
+  ["The first guitar", "The instrument that started everything."],
+  ["The road to Dhaka", "Leaving the port city for the capital."],
+  ["The psychedelic path", "A sound no one here had played before."],
+  ["From poem to song", "How a poem becomes a song."],
+  ["The night on stage", "What happens when the lights go up."],
+  ["The nineties wave", "When band music filled every cassette shop."],
+  ["Choosing home", "Why he stayed to make music at home."],
+  ["The City Bard", ""],
+  ["Psychedelic waves", ""],
+  ["Night rails", ""],
+  ["The guitar", ""],
+  ["Shayan", ""],
 ];
 
-const MEGHLA = [
-  ['Words are rivers', 'They change the land they pass through.'],
-  ['Write what you cannot say', 'The page listens when people will not.'],
-  ['A poem is a small house', 'Build it so one more person can sit inside.'],
-  ['The mother tongue', 'I dream in Bangla, so I write in it.'],
-  ['Ink and rain', 'Every season I return to the same window.'],
-  ['Cut the first line', 'The real poem usually starts on the second.'],
-  ['Read it aloud', 'If the mouth stumbles, the line is not finished.'],
-  ['Short is not small', 'Four lines can hold a whole life.'],
-  ['The first book', 'Three hundred copies, carried to the fair by hand.'],
-  ['The letter from a reader', 'A stranger copied my poem into her wedding card.'],
-  ['The window', ''], ['Ink river', ''], ['The fair', ''],
-  ['The pen', ''], ['Rain alphabet', ''],
+const TANIM = [
+  ["The gift guitar", "A gift from his father."],
+  ["From a river town", "Where the story starts."],
+  ["The first band", "Garage rehearsals, dreams bigger than the room."],
+  ["The debut album", "The first record with his name on it."],
+  ["Learning from heroes", "The players who showed the way."],
+  ["The melodic solo", "How a solo should sing."],
+  ["Chasing tone", "Guitars, pickups and the sound in his head."],
+  ["The online stage", "Bringing guitarists together on screen."],
+  ["The big-band years", "A decade of lead guitar in a heavy band."],
+  ["The homecoming stage", "Back on a home stage after years abroad."],
+  ["Six strings", ""],
+  ["Across borders", ""],
+  ["Fretboard stars", ""],
+  ["The guitar", ""],
+  ["Tanim", ""],
 ];
 
-const SHOHOR = [
-  ['Five friends, one room', 'One rented room, one fan, five opinions about every song.'],
-  ['The city is the fifth member', 'Horns, rain and rickshaw bells are on every record.'],
-  ['Night bus home', 'Most of our lyrics were written on the last bus.'],
-  ['Rent day rehearsal', 'We played harder on the days we could not pay.'],
-  ['Songs from the window', 'The street below taught us every rhythm we know.'],
-  ['Everyone writes the chorus', 'A song belongs to the band, not the loudest voice.'],
-  ['Record it before it is perfect', 'The first take keeps the feeling. Fix the rest later.'],
-  ['Turn the street into a drum', 'Every city sound is a beat if you listen long enough.'],
-  ['First gig, eleven people', 'Eleven people came. Nine of them were cousins.'],
-  ['The song the city sang back', 'One night a whole street sang our chorus before we did.'],
-  ['Night rails', ''], ['Six strings', ''], ['The B-side', ''], ['The bass', ''], ['Shohor Lane', ''],
+const RUMI = [
+  ["A house of music", "Raised among harmoniums and old records."],
+  ["A son of two cities", "Two cities, one musical family."],
+  ["The years abroad", "Where Western rock took hold."],
+  ["The band is born, 1983", "The band that began it all."],
+  ["The club nights", "Cover songs in smoky clubs, every weekend."],
+  ["In search of tone", "A guitarist obsessed with sound."],
+  ["The first Bangla album", "When the band switched to Bangla."],
+  ["Standing for musicians", "Speaking up for the country’s band musicians."],
+  ["Pitch or stage", "A college cricketer who chose the stage."],
+  ["Two friends, one road", "A journey shared with his oldest bandmate."],
+  ["The long road", ""],
+  ["Bat and guitar", ""],
+  ["The 1983 record", ""],
+  ["The guitar", ""],
+  ["Rumi", ""],
 ];
 
 export async function seed(db, svc, { quiet = false } = {}) {
@@ -79,8 +90,8 @@ export async function seed(db, svc, { quiet = false } = {}) {
 
   // Artist 1: live S/CELL Night with bids.
   const arjo = svc.createArtist({
-    name: 'Arjo Rahman', category: 'Rock vocalist', isDemo: true, cards: ARJO.map(([title, body]) => ({ title, body })),
-    bio: 'Fictional demo artist. Two decades of rooftop rehearsals, monsoon concerts and a front row that never changed.',
+    name: 'Shayan Rahi', category: 'Rock vocalist', isDemo: true, cards: SHAYAN.map(([title, body]) => ({ title, body })),
+    bio: 'Fictional demo artist. The City Bard: a port-city voice who brought a psychedelic sound to Bangla band music.',
   });
   const auctionId = svc.createAuction({ artistId: arjo, startsAt: now() - 60 * 60 * 1000, endsAt: now() + 3 * DAY, reserve: 1500 });
   const lots = db.all('SELECT id FROM lots WHERE auction_id = ? ORDER BY id', auctionId);
@@ -89,8 +100,8 @@ export async function seed(db, svc, { quiet = false } = {}) {
 
   // Artist 2: released collection with first sales, resales and live listings.
   const meghla = svc.createArtist({
-    name: 'Meghla Sultana', category: 'Poet', isDemo: true, tookAdvance: true, cards: MEGHLA.map(([title, body]) => ({ title, body })),
-    bio: 'Fictional demo poet. Four books, one window, and a habit of writing in the rain.',
+    name: 'Rumi Haque', category: 'Band leader and guitarist', isDemo: true, tookAdvance: true, cards: RUMI.map(([title, body]) => ({ title, body })),
+    bio: 'Fictional demo artist. On the road since 1983: club nights, the first Bangla album and a band that never stopped.',
   });
   db.run('UPDATE artists SET sponsor_id = ?, status = ? WHERE id = ?', sponsor, 'released', meghla);
   const mCards = db.all(`SELECT id FROM cards WHERE artist_id = ? ORDER BY number`, meghla);
@@ -119,11 +130,11 @@ export async function seed(db, svc, { quiet = false } = {}) {
   }
 
   // Artist 3: announced, not yet on sale.
-  svc.createArtist({ name: 'Shohor Lane', category: 'Band', isDemo: true, cards: SHOHOR.map(([title, body]) => ({ title, body })), bio: 'Fictional demo band. Five friends, one rented practice room, songs about the city at night.' });
+  svc.createArtist({ name: 'Tanim Sur', category: 'Lead guitarist', isDemo: true, cards: TANIM.map(([title, body]) => ({ title, body })), bio: 'Fictional demo artist. Six strings abroad: from rooftop rehearsals to stages and screens around the world.' });
 
   // Demo artist and sponsor logins linked to their records, so both dashboards can be tried.
   db.run(`INSERT INTO users (name, display_name, email, phone, password_hash, role, kyc_status, artist_id, created_at) VALUES (?,?,?,?,?,?,?,?,?)`,
-    'Meghla Sultana', 'Meghla', 'artist@scell.local', '01711000010', demoPass, 'artist', 'verified', meghla, now());
+    'Rumi Haque', 'Rumi', 'artist@scell.local', '01711000010', demoPass, 'artist', 'verified', meghla, now());
   db.run(`INSERT INTO users (name, display_name, email, phone, password_hash, role, kyc_status, sponsor_id, created_at) VALUES (?,?,?,?,?,?,?,?,?)`,
     'Demo Pay partnerships team', 'Demo Pay', 'sponsor@scell.local', '01711000011', demoPass, 'sponsor', 'verified', sponsor, now());
   db.run('INSERT INTO ledger (party, party_id, amount, note, created_at) VALUES (?,?,?,?,?)', 'sponsor_fee', sponsor, 3750, 'Sponsorship fee received (demo)', now() - 20 * DAY);

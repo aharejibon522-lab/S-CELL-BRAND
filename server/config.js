@@ -113,6 +113,7 @@ export const publicConfig = () => ({
     low: config.resale.low,
     high: config.resale.high,
     minStep: config.resale.minStep,
+    advanceArtistReduction: config.resale.advanceArtistReduction,
     verifyDays: config.resale.verifyDays,
     transferFeePct: config.resale.transferFeePct,
     transferFeeMin: config.resale.transferFeeMin,
