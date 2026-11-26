@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: scell
+    runtime: node
+    plan: starter            # a persistent disk needs a paid plan; the free plan erases the database on every restart
+    buildCommand: echo "No dependencies to install"
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22.13.0"
+      - key: NODE_ENV
+        value: production
+      - key: DB_PATH
+        value: /var/data/scell.db
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: NID_HASH_KEY
+        generateValue: true
+      - key: SEED_DEMO
+        value: "true"        # set to "false" before launch to start without the fictional demo artists
+      - key: KYC_AUTO_APPROVE
+        value: "false"
+    disk:
+      name: scell-data
+      mountPath: /var/data
+      sizeGB: 1
