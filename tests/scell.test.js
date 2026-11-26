@@ -240,3 +240,21 @@ test('policies, guides, calculators, dashboards and statements', async (t) => {
   assert.equal(saved.data.version, 2);
   assert.equal((await artist('GET', '/api/auth/me')).data.user.pendingPolicies.length, 1);
 });
+
+test('concept room stays private until unlocked by an admin', async () => {
+  const env = await setup();
+  const guest = env.client();
+  const locked = await guest('GET', '/api/concept');
+  assert.equal(locked.data.locked, true);
+  const img = await fetch(env.base + '/api/concept/img/james/01.webp');
+  assert.equal(img.status, 403);
+  const bad = await guest('POST', '/api/concept/unlock', { code: 'wrong' });
+  assert.equal(bad.status, 403);
+  const admin = env.client();
+  await admin('POST', '/api/auth/login', { email: 'admin@scell.local', password: 'admin-pass-123' });
+  const open = await admin('GET', '/api/concept');
+  assert.equal(open.data.locked, false);
+  assert.equal(open.data.artists.length, 3);
+  assert.equal(open.data.artists[0].cards.length, 15);
+  env.server.close();
+});

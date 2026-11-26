@@ -43,7 +43,24 @@ export function badges(codes = []) {
 }
 
 // Renders a card as an engraved steel plate.
+// Artists with finished illustrated artwork (from /api/config). Their cards render as the engraved artwork itself.
+let CARD_ART = new Set();
+export const setCardArt = (list) => { CARD_ART = new Set(list || []); };
+const slugOf = (name) => String(name || '').toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/[\s_]+/g, '-').slice(0, 60);
+export function cardImage(c) {
+  if (c.series === 'reward') return null;
+  const slug = c.artist?.slug || slugOf(c.artist?.name || c.artistName);
+  return CARD_ART.has(slug) ? `/img/cards/${slug}/${pad2(c.number)}.webp` : null;
+}
+
 export function plate(c, { engrave = false, extraClass = '' } = {}) {
+  const img = cardImage(c);
+  if (img) {
+    const portraitI = c.orientation === 'portrait';
+    const nI = pad2(c.number);
+    const dim = ['retired', 'lost'].includes(c.status) ? 'dim' : '';
+    return `<div class="plate has-art ${portraitI ? 'portrait' : ''} ${dim} ${extraClass}" role="img" aria-label="${esc(`${c.artist?.name || c.artistName || ''} card ${nI} of 15: ${c.title}`)}"><img src="${img}" alt="" loading="lazy" decoding="async"></div>`;
+  }
   const portrait = c.orientation === 'portrait';
   const reward = c.series === 'reward';
   const artistName = c.artist?.name || c.artistName || '';

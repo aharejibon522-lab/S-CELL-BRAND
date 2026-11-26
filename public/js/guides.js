@@ -2,7 +2,7 @@ import { esc, taka, pad2, date, api, toast, plate, THEME_LABEL, STATUS_LABEL } f
 
 const AUDIENCES = [
   ['collectors', 'For collectors', 'Bid, own, trade and rank.'],
-  ['artists', 'For artists', 'Create your fifteen and earn for life.'],
+  ['artists', 'For artists', 'Create your fifteen and earn on every resale.'],
   ['sponsors', 'For sponsors and investors', 'Back a collection and share in how it travels.'],
 ];
 const AUDIENCE_LABEL = { collectors: 'Collectors', artists: 'Artists', sponsors: 'Sponsors' };

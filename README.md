@@ -75,6 +75,13 @@ On the free plan the database is erased on every restart.
 - Policies: edit any policy in plain text; each save becomes a new version. Restore the standard text at any time.
 - Record sponsorship fee payments, which then show in the sponsor dashboard
 
+## Card artwork and the private concept room
+
+- **Illustrated cards.** Artists with finished artwork have one image per card in `public/img/cards/<artist-slug>/01.webp … 15.webp`. Any card whose artist has a folder there is shown as its artwork everywhere on the site; other artists fall back to the drawn steel plate. The home page opens on a curved shelf of those cards (`public/js/shelf.js`).
+- **Concept room (`/concept`).** Proposals for real artists who have not signed yet. It is hidden from search engines, never listed in the navigation, and opens only for an admin or someone with the `PITCH_CODE` access code (valid 7 days per browser). Its images are served only through the API to those viewers.
+- **Why it's encrypted.** This repository is public, so the concept content is committed only as `server/private/concept.sealed` (AES-256-GCM). The server opens it with `CONCEPT_KEY`. The raw files (`server/content/concept.json`, `server/private/concept/`) are git-ignored; after changing them, run `CONCEPT_KEY=… node tools/seal-concept.mjs` and commit the new sealed file.
+- A concept artist moves to the public site only after they sign the artist agreement: add them in the admin panel and copy their images into `public/img/cards/<slug>/`.
+
 ## Business rules
 
 Every rule is in **`server/config.js`**, with a comment saying where it comes from:

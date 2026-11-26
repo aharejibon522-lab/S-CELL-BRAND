@@ -13,6 +13,9 @@ export const config = {
   production: process.env.NODE_ENV === 'production',
   dbPath: process.env.DB_PATH || './data/scell.db',
   sessionDays: num('SESSION_DAYS', 30),
+  // Access code for the private concept room (/concept). Empty means only admins can open it.
+  pitchCode: process.env.PITCH_CODE || '',
+  secret: process.env.NID_HASH_KEY || 'dev-only-secret',
 
   // Collection structure: exactly 15 official cards per artist.
   collection: [
@@ -93,7 +96,16 @@ export const config = {
   },
 };
 
+import { readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+// Artists whose cards have finished illustrated artwork in public/img/cards/<slug>/NN.webp.
+export const cardArt = (() => {
+  try { return readdirSync(fileURLToPath(new URL('../public/img/cards/', import.meta.url)), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name); }
+  catch { return []; }
+})();
+
 export const publicConfig = () => ({
+  cardArt,
   collection: config.collection,
   firstSale: config.firstSale,
   resale: {

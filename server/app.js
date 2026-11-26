@@ -106,6 +106,8 @@ export function createApp(db) {
       method: req.method, path, query: url.searchParams, body: {},
       ip: (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0].trim(),
       user: sessionUser(cookies[COOKIE]),
+      cookies,
+      setCookie(pair, maxAge) { setCookies.push(`${pair}; ${cookieFlags}; Max-Age=${maxAge}`); },
       setSession(userId) {
         const token = newToken();
         db.run('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?,?,?)', sha256(token), userId, now() + config.sessionDays * DAY);
@@ -125,6 +127,11 @@ export function createApp(db) {
       }
       const out = await api.handle(ctx);
       if (setCookies.length) headers['Set-Cookie'] = setCookies;
+      if (out && out.__file) {
+        const data = out.__file.data;
+        res.writeHead(200, { ...SECURITY_HEADERS, 'Content-Type': out.__file.type, 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex, nofollow' }).end(data);
+        return;
+      }
       if (out && out.__raw) {
         headers['Content-Type'] = out.__raw.type;
         headers['Content-Disposition'] = `attachment; filename="${out.__raw.filename}"`;

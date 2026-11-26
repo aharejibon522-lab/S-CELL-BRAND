@@ -21,6 +21,10 @@ services:
         generateValue: true
       - key: SEED_DEMO
         value: "true"        # set to "false" before launch to start without the fictional demo artists
+      - key: PITCH_CODE        # access code for the private concept room at /concept
+        sync: false
+      - key: CONCEPT_KEY       # opens server/private/concept.sealed
+        sync: false
       - key: KYC_AUTO_APPROVE
         value: "false"
     disk:

@@ -4,3 +4,5 @@ data/
 *.db-wal
 *.db-shm
 .env
+server/private/concept/
+server/content/concept.json

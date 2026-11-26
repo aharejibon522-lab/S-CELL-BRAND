@@ -82,7 +82,7 @@ export function guides(c) {
         systems: [
           { name: 'Creating your collection', steps: ['Apply or meet the S/CELL team.', 'Agree terms in writing: rights, approvals, royalties, promotion.', 'Write your 10 messages and choose your 5 visuals; approve every proof.', 'Cards are engraved, chip-fitted and registered.'] },
           { name: 'Your S/CELL Night', steps: ['Your promo video and posts announce the night.', 'You play a short unplugged set.', 'Your 15 cards are auctioned live.', `You receive ${f.artistPct}% of every winning bid.`] },
-          { name: 'Royalties for life', steps: ['Every time one of your cards is resold officially, your share is calculated automatically.', 'It appears in your dashboard the moment the trade settles.', 'It is paid with your monthly statement.', 'Royalties continue for the life of your cards and pass to your heirs.'] },
+          { name: 'Royalties on every resale', steps: ['Every time one of your cards is resold officially, your share is calculated automatically.', 'It appears in your dashboard the moment the trade settles.', 'It is paid with your monthly statement.', 'Royalties continue for as long as a card trades officially. If a card retires under the decay rule, royalties stop with its last resale.'] },
         ],
       },
       calculator: 'artist',

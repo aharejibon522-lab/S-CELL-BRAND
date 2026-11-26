@@ -1,4 +1,33 @@
 import { config, publicConfig } from './config.js';
+import { readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { createHmac, timingSafeEqual, createDecipheriv } from 'node:crypto';
+
+// The concept room's content is committed only in encrypted form (server/private/concept.sealed),
+// opened with CONCEPT_KEY. In local development the raw, git-ignored files are used if present.
+const CONCEPT_FILES = new Map();
+let CONCEPT = [];
+(() => {
+  const root = new URL('./', import.meta.url);
+  const key = Buffer.from(process.env.CONCEPT_KEY || '', 'hex');
+  try {
+    if (key.length === 32) {
+      const blob = readFileSync(new URL('private/concept.sealed', root));
+      const d = createDecipheriv('aes-256-gcm', key, blob.subarray(0, 12));
+      d.setAuthTag(blob.subarray(12, 28));
+      const { meta, files } = JSON.parse(Buffer.concat([d.update(blob.subarray(28)), d.final()]).toString('utf8'));
+      CONCEPT = meta;
+      for (const [k, v] of Object.entries(files)) CONCEPT_FILES.set(k, Buffer.from(v, 'base64'));
+      return;
+    }
+  } catch (e) { console.error('Concept room: could not open the sealed file. Check CONCEPT_KEY.'); }
+  try {
+    CONCEPT = JSON.parse(readFileSync(new URL('content/concept.json', root), 'utf8'));
+    for (const a of CONCEPT) for (const f of readdirSync(new URL(`private/concept/${a.key}/`, root))) CONCEPT_FILES.set(`${a.key}/${f}`, readFileSync(new URL(`private/concept/${a.key}/${f}`, root)));
+  } catch { /* no concept content on this server */ }
+})();
+const PITCH_COOKIE = 'scell_pitch';
+const pitchSig = (exp) => createHmac('sha256', config.secret).update('pitch:' + exp).digest('base64url');
 import { now, DAY, hashPassword, verifyPassword, sha256, newToken, rateLimit } from './security.js';
 import { HttpError } from './services.js';
 
@@ -34,7 +63,7 @@ export function createApi(db, svc, portal) {
     return {
       id: c.id, code: c.code, series: c.series, number: c.number, theme: c.theme, orientation: c.orientation,
       title: c.title, body: c.body, status: c.status,
-      artist: { id: a.id, slug: a.slug, name: a.name, category: a.category },
+      artist: { id: a.id, slug: a.slug, name: a.name, category: a.category, isDemo: !!a.is_demo },
       owner: owner ? { id: owner.id, displayName: owner.display_name } : null,
       firstSalePrice: c.first_sale_price, lastPrice: c.last_price, lastSaleAt: c.last_sale_at,
       tradeCount: c.trade_count, acquiredAt: c.acquired_at,
@@ -82,6 +111,46 @@ export function createApi(db, svc, portal) {
   }
 
   // ---------- Health and config ----------
+  // ---------- Showcase (home page shelf): artistic-visual cards of artists that have finished artwork ----------
+  add('GET', '/api/showcase', ({ user }) => {
+    const art = publicConfig().cardArt;
+    if (!art.length) return { items: [] };
+    const rows = db.all(`SELECT c.* FROM cards c JOIN artists a ON a.id = c.artist_id
+      WHERE c.series = 'official' AND c.orientation = 'portrait' AND a.slug IN (${art.map(() => '?').join(',')})
+      ORDER BY a.id, c.number`, ...art);
+    return { items: rows.map((c) => cardView(c, user)) };
+  });
+
+  // ---------- Private concept room: proposals for real artists, never public inventory ----------
+  const pitchAllowed = (user, cookies) => {
+    if (user && user.role === 'admin') return true;
+    const raw = cookies?.[PITCH_COOKIE] || '';
+    const [exp, sig] = raw.split('.');
+    if (!exp || !sig || Number(exp) < now()) return false;
+    const want = Buffer.from(pitchSig(exp)); const got = Buffer.from(sig);
+    return want.length === got.length && timingSafeEqual(want, got);
+  };
+  add('GET', '/api/concept', ({ user, cookies }) => {
+    if (!pitchAllowed(user, cookies)) return { locked: true, codeEnabled: !!config.pitchCode };
+    return { locked: false, artists: CONCEPT, ready: CONCEPT.length > 0 };
+  });
+  add('POST', '/api/concept/unlock', ({ body, ip, setCookie }) => {
+    if (!rateLimit(`pitch:${ip}`, 8, 15 * 60 * 1000)) fail(429, 'Too many tries. Wait 15 minutes and try again.');
+    const code = str(body.code, 100);
+    if (!config.pitchCode || !code) fail(403, 'That access code is not right.');
+    const a = Buffer.from(code); const b = Buffer.from(config.pitchCode);
+    if (a.length !== b.length || !timingSafeEqual(a, b)) fail(403, 'That access code is not right.');
+    const exp = now() + 7 * DAY;
+    setCookie(`${PITCH_COOKIE}=${exp}.${pitchSig(exp)}`, 7 * 86400);
+    return { ok: true };
+  });
+  add('GET', '/api/concept/img/:artist/:file', ({ user, cookies, params }) => {
+    if (!pitchAllowed(user, cookies)) fail(403, 'This room is private.');
+    const data = CONCEPT_FILES.get(`${params.artist}/${params.file}`);
+    if (!data) fail(404, 'Not found.');
+    return { __file: { data, type: 'image/webp' } };
+  });
+
   add('GET', '/api/health', () => ({ ok: true, time: now() }));
   add('GET', '/api/config', () => publicConfig());
 

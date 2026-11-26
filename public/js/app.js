@@ -1,9 +1,10 @@
-import { esc, taka, pad2, date, dateTime, api, toast, plate, badges, formData, countdown, THEME_LABEL, STATUS_LABEL, BADGE_LABEL } from './ui.js';
+import { esc, taka, pad2, date, dateTime, api, toast, plate, badges, formData, countdown, THEME_LABEL, STATUS_LABEL, BADGE_LABEL, setCardArt, cardImage } from './ui.js';
+import { mountShelf } from './shelf.js';
 import { adminView } from './admin.js';
 import { guidesHub, guidePage, policiesIndex, policyPage, artistDashboard, sponsorDashboard } from './guides.js';
 
 const main = document.getElementById('main');
-const state = { me: null, config: null, timers: [], handlers: { submit: {}, click: {} } };
+const state = { me: null, config: null, timers: [], cleanups: [], handlers: { submit: {}, click: {} } };
 
 // ---------- Router ----------
 const routes = [
@@ -28,6 +29,7 @@ const routes = [
   [/^\/policies$/, () => policiesIndex(ctx())],
   [/^\/policies\/([\w-]+)$/, (s) => policyPage(ctx(), s)],
   [/^\/dashboard\/artist$/, () => artistDashboard(ctx())],
+  [/^\/concept$/, conceptPage],
   [/^\/dashboard\/sponsor$/, () => sponsorDashboard(ctx())],
 ];
 
@@ -46,6 +48,8 @@ function setTitle(t) { document.title = t ? `${t} — S/CELL` : 'S/CELL — Fift
 async function render() {
   state.timers.forEach(clearInterval);
   state.timers = [];
+  state.cleanups.forEach((f) => { try { f(); } catch {} });
+  state.cleanups = [];
   state.handlers = { submit: {}, click: {} };
   const path = location.pathname.replace(/\/+$/, '') || '/';
   document.querySelectorAll('.nav a').forEach((a) => {
@@ -159,15 +163,17 @@ const SAMPLE = { number: 1, series: 'official', orientation: 'landscape', theme:
 // ---------- Home ----------
 async function home() {
   setTitle('');
-  const [{ artists }, { auctions }] = await Promise.all([api('/api/artists'), api('/api/auctions')]);
+  const [{ artists }, { auctions }, { items: show }] = await Promise.all([api('/api/artists'), api('/api/auctions'), api('/api/showcase').catch(() => ({ items: [] }))]);
   const live = auctions.find((a) => a.status === 'live') || auctions.find((a) => a.status === 'scheduled');
   const offset = live ? live.serverTime - Date.now() : 0;
   const slot = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => `<span class="slot">${pad2(from + i)}</span>`).join('');
 
   main.innerHTML = `
-  <section class="hero">
+  <section class="shelf-section" aria-label="Featured cards"><div id="shelf"></div></section>
+  <section class="hero intro">
     <div class="wrap hero-grid">
       <div class="hero-copy">
+        <p class="kicker">Engraved steel collectibles · খোদাই করা ইস্পাতের সংগ্রহ</p>
         <h1 class="display"><span>Fifteen.</span><span>One artist.</span><span>Forever.</span></h1>
         <p class="lede">S/CELL engraves an artist's own words and art into 15 numbered steel cards. There will never be a sixteenth. Bid at S/CELL Night, own a verified piece of the story, and trade it on the official market.</p>
         <div class="btn-row">
@@ -176,14 +182,16 @@ async function home() {
         </div>
       </div>
       <div class="hero-card">
-        ${plate(SAMPLE, { engrave: true })}
+        ${plate({ ...SAMPLE, title: 'Words are rivers', body: 'They change the land they pass through.', artist: { name: 'Meghla Sultana', slug: 'meghla-sultana' } }, { engrave: true })}
         <div class="structure" aria-label="How the 15 cards are divided">
+          <p class="structure-cap">Every collection, the same fifteen</p>
           <div class="structure-row">
             <div class="slot-group l5"><div class="slots">${slot(1, 5)}</div><p>5 foundational thoughts</p></div>
             <div class="slot-group l3"><div class="slots">${slot(6, 8)}</div><p>3 creative philosophies</p></div>
             <div class="slot-group l2"><div class="slots">${slot(9, 10)}</div><p>2 career reflections</p></div>
             <div class="slot-group p5"><div class="slots">${slot(11, 15)}</div><p>5 artistic visuals</p></div>
           </div>
+          <p class="structure-note">Cards 1–10 carry the artist's words. Cards 11–15 carry the art they chose. Each is one of one.</p>
         </div>
       </div>
     </div>
@@ -219,7 +227,7 @@ async function home() {
         <li><h3>Authentication</h3><p>Every card carries its own chip and a record in the S/CELL registry.</p></li>
         <li><h3>S/CELL Night</h3><p>The artist plays a short unplugged set, then the cards are auctioned live.</p></li>
         <li><h3>Ownership</h3><p>Winners receive the card, its certificate and a verified owner account.</p></li>
-        <li><h3>Official resale</h3><p>Owners can resell on the marketplace. The artist earns 13% of every resale, for life.</p></li>
+        <li><h3>Official resale</h3><p>Owners can resell on the marketplace. The artist earns 13% of every resale up to ৳1 lakh (10% above it), for as long as the card trades.</p></li>
       </ol>
     </div>
   </section>
@@ -244,7 +252,7 @@ async function home() {
           <dt>Every owner</dt><dd>ID-checked with NID and phone</dd>
           <dt>Every card</dt><dd>Chip-verified and registered</dd>
           <dt>Every payment</dt><dd>Held by a licensed payment partner</dd>
-          <dt>Every resale</dt><dd>13% to the artist, recorded publicly</dd>
+          <dt>Every resale</dt><dd>13% to the artist up to ৳1 lakh, 10% above, recorded publicly</dd>
           <dt>Every number</dt><dd>Never reissued</dd>
         </dl>
       </div>
@@ -257,7 +265,7 @@ async function home() {
       <p class="subtitle">Every facility, option and rule, explained for the people it is for.</p>
       <div class="audience-grid" style="margin-top:28px">
         <a class="audience" href="/guides/collectors"><span class="audience-title">For collectors</span><span class="subtitle">Bid, own, trade and rank.</span><span class="audience-go">Open the guide</span></a>
-        <a class="audience" href="/guides/artists"><span class="audience-title">For artists</span><span class="subtitle">Create your fifteen and earn for life.</span><span class="audience-go">Open the guide</span></a>
+        <a class="audience" href="/guides/artists"><span class="audience-title">For artists</span><span class="subtitle">Create your fifteen and earn on every resale.</span><span class="audience-go">Open the guide</span></a>
         <a class="audience" href="/guides/sponsors"><span class="audience-title">For sponsors and investors</span><span class="subtitle">Back a collection and share in how it travels.</span><span class="audience-go">Open the guide</span></a>
       </div>
     </div>
@@ -275,6 +283,92 @@ async function home() {
     const target = live.status === 'live' ? live.endsAt : live.startsAt;
     state.timers.push(setInterval(() => { if (cd.firstChild) cd.firstChild.textContent = countdown(target, offset); }, 1000));
   }
+  const shelfEl = document.getElementById('shelf');
+  if (show.length) {
+    const items = show.map((c) => ({
+      img: cardImage(c), group: c.artist.name, title: c.title,
+      sub: `${c.artist.name} · ${c.artist.category}`,
+      meta: `Card ${pad2(c.number)} / 15 — ${THEME_LABEL[c.theme] || ''}`,
+      body: cardStatusLine(c),
+      credit: c.artist.isDemo ? 'Fictional demo artist, shown to explain how S/CELL works.' : '',
+      href: `/cards/${c.id}`, hrefLabel: 'See this card',
+    }));
+    const startAt = Math.max(0, items.findIndex((i) => i.group === (live?.artist?.name || '')));
+    state.cleanups.push(mountShelf(shelfEl, items, { start: startAt + 2, label: 'Featured S/CELL cards' }));
+  } else shelfEl.closest('section').remove();
+}
+
+function cardStatusLine(c) {
+  if (c.status === 'auction') return `On the block at the live S/CELL Night. Bidding started at ${taka(state.config?.firstSale?.defaultReserve || 1500)}.`;
+  if (c.status === 'listed' && c.listing) return `For sale on the official market at ${taka(c.listing.price)}${c.owner ? `, from ${c.owner.displayName}` : ''}.`;
+  if (c.owner) return `Owned by ${c.owner.displayName}${c.lastPrice ? `. Last sold for ${taka(c.lastPrice)}` : ''}.`;
+  return 'Not sold yet. It goes to auction, one of fifteen, at its artist\'s S/CELL Night.';
+}
+
+// ---------- Private concept room ----------
+async function conceptPage() {
+  setTitle('Private concept room');
+  let meta = document.querySelector('meta[name=robots]');
+  if (!meta) { meta = document.createElement('meta'); meta.name = 'robots'; document.head.appendChild(meta); }
+  meta.content = 'noindex, nofollow';
+  state.cleanups.push(() => meta.remove());
+  const data = await api('/api/concept');
+  if (data.locked) {
+    main.innerHTML = `<section class="section"><div class="wrap narrow">
+      <p class="kicker">Private</p><h1 class="h2">Concept room</h1>
+      <p class="subtitle">Proposals prepared for artists and their teams. Not public, not for sale.</p>
+      ${data.codeEnabled ? `<form class="form" data-form="unlock" style="margin-top:28px">
+        <label class="field"><span>Access code</span><input class="input" name="code" type="password" autocomplete="off" required></label>
+        <button class="btn" type="submit">Open the concept room</button></form>`
+      : `<p class="notice" style="margin-top:28px">Sign in with an S/CELL admin account to open this room.</p><a class="btn" href="/signin">Sign in</a>`}
+    </div></section>`;
+    state.handlers.submit.unlock = async (d) => {
+      await api('/api/concept/unlock', { method: 'POST', body: d });
+      render();
+    };
+    return;
+  }
+  if (!data.artists.length) {
+    main.innerHTML = '<section class="section"><div class="wrap narrow"><h1 class="h2">Concept room</h1><p class="subtitle">The concept files are not installed on this server yet.</p></div></section>';
+    return;
+  }
+  const img = (k, f) => `/api/concept/img/${k}/${f}.webp`;
+  main.innerHTML = `
+  <section class="concept-banner"><div class="wrap"><p><b>Concept proposal.</b> Not affiliated with or endorsed by the artists named here. Nothing on this page is for sale. Every message on the cards will be written by the artist.</p></div></section>
+  <section class="shelf-section" aria-label="Founding Set visuals"><div id="shelf"></div></section>
+  <section class="section-tight"><div class="wrap">
+    <h1 class="h2">The Founding Set</h1>
+    <p class="subtitle">প্রতিষ্ঠার সেট · Three artists, fifteen steel cards each, told as a career.</p>
+    <nav class="concept-tabs" aria-label="Artists">${data.artists.map((a) => `<a href="#c-${a.key}" style="--acc:${a.tint[1]}">${esc(a.name)} <span class="bnin">${esc(a.nameBn)}</span></a>`).join('')}</nav>
+  </div></section>
+  ${data.artists.map((a) => `
+  <section class="section concept-artist" id="c-${a.key}" style="--acc:${a.tint[1]};--acc2:${a.tint[2]}">
+    <div class="wrap">
+      <div class="concept-head">
+        <div>
+          <p class="kicker acc">${esc(a.name)} · <span class="bnin">${esc(a.nameBn)}</span></p>
+          <h2 class="display concept-title">${esc(a.title)}</h2>
+          <p class="concept-bn bnin">${esc(a.titleBn)}</p>
+          <p class="subtitle">${esc(a.subtitle)} · <span class="bnin">${esc(a.subtitleBn)}</span></p>
+          <ul class="concept-facts">${a.facts.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
+          <p class="fine">Facts to be confirmed with the artist's management before this is shared.</p>
+        </div>
+        <img class="concept-back" src="${img(a.key, 'back')}" alt="Back design for ${esc(a.name)}: chip, card ID, edition, story line, verify link, signature space and sponsor slot" loading="lazy">
+      </div>
+      ${[['t1', 'Roots and beginnings · শুরুর গল্প', 1, 5], ['t2', 'The craft · শিল্পের পথ', 6, 8], ['t3', 'Defining moments · মোড় ঘোরানো মুহূর্ত', 9, 10], ['portrait', 'Artistic visuals · দৃশ্যকল্প', 11, 15]].map(([t, label, from, to]) => `
+        <h3 class="concept-chapter"><span>${pad2(from)}–${pad2(to)}</span>${esc(label)}</h3>
+        <div class="concept-grid ${t === 'portrait' ? 'portraits' : ''}">
+          ${a.cards.filter((c) => c.number >= from && c.number <= to).map((c) => `<figure><img src="${img(a.key, pad2(c.number))}" alt="${esc(`${a.name} card ${c.number}: ${c.title}`)}" loading="lazy"><figcaption><b>${pad2(c.number)}</b> ${esc(c.title)}${c.prompt ? `<span>${esc(c.prompt)}</span>` : ''}</figcaption></figure>`).join('')}
+        </div>`).join('')}
+    </div>
+  </section>`).join('')}
+  <section class="section-tight"><div class="wrap"><p class="fine">Prepared by S/CELL for private discussion with each artist and their management. Card themes, titles and art can all change. Facts are drawn from public sources and must be confirmed before use.</p></div></section>`;
+  const items = data.artists.flatMap((a) => a.cards.filter((c) => c.orientation === 'portrait').map((c) => ({
+    img: img(a.key, pad2(c.number)), group: a.name, title: c.title, sub: `${a.name} · ${a.title}`,
+    meta: `Card ${pad2(c.number)} / 15 — ${c.chapter}`, body: `${c.titleBn} · ${a.subtitle}`,
+    credit: 'Concept only. Not affiliated with or endorsed by the artist.', href: `#c-${a.key}`, hrefLabel: 'See the full set',
+  })));
+  state.cleanups.push(mountShelf(document.getElementById('shelf'), items, { start: 2, label: 'Founding Set visual cards', wordLeft: 'প্রতিষ্ঠা', wordRight: 'সেট' }));
 }
 
 // ---------- Collections ----------
@@ -623,7 +717,7 @@ async function partnersPage() {
           <table class="table" style="margin-top:18px"><tbody>
             <tr><td>Each first sale at S/CELL Night</td><td class="r num">${f.artistPct}%</td></tr>
             <tr><td>Each first sale, with an advance paid upfront</td><td class="r num">${f.artistPctWithAdvance}%</td></tr>
-            <tr><td>Every official resale up to ${taka(r.tierBreak)}, for life</td><td class="r num">${r.low.artist}%</td></tr>
+            <tr><td>Every official resale up to ${taka(r.tierBreak)}</td><td class="r num">${r.low.artist}%</td></tr>
             <tr><td>Every official resale above ${taka(r.tierBreak)}</td><td class="r num">${r.high.artist}%</td></tr>
           </tbody></table>
           <p class="fine" style="margin-top:12px">With an advance, the resale share is one point lower. Final terms are set in the signed artist agreement.</p>
@@ -862,6 +956,7 @@ async function accountPage() {
 // ---------- Boot ----------
 (async () => {
   try { state.config = await api('/api/config'); } catch { state.config = null; }
+  setCardArt(state.config?.cardArt);
   await refreshMe().catch(() => null);
   render();
 })();

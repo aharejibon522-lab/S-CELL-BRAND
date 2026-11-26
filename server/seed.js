@@ -15,8 +15,8 @@ const ARJO = [
   ['Tune the guitar, not the truth', 'Change the key. Never change what the song means.'],
   ['The first full house', 'The night the hall filled, I forgot the second verse. Nobody cared.'],
   ['Twenty years, one street', 'Different stages, same people in the front row.'],
-  ['Visual I: The rooftop', ''], ['Visual II: Monsoon set', ''], ['Visual III: The borrowed guitar', ''],
-  ['Visual IV: Front row', ''], ['Visual V: Last encore', ''],
+  ['The rooftop', ''], ['Monsoon set', ''], ['The borrowed guitar', ''],
+  ['Front row', ''], ['Last encore', ''],
 ];
 
 const MEGHLA = [
@@ -30,8 +30,22 @@ const MEGHLA = [
   ['Short is not small', 'Four lines can hold a whole life.'],
   ['The first book', 'Three hundred copies, carried to the fair by hand.'],
   ['The letter from a reader', 'A stranger copied my poem into her wedding card.'],
-  ['Visual I: The window', ''], ['Visual II: Ink river', ''], ['Visual III: The fair', ''],
-  ['Visual IV: Rain alphabet', ''], ['Visual V: The small house', ''],
+  ['The window', ''], ['Ink river', ''], ['The fair', ''],
+  ['The pen', ''], ['Rain alphabet', ''],
+];
+
+const SHOHOR = [
+  ['Five friends, one room', 'One rented room, one fan, five opinions about every song.'],
+  ['The city is the fifth member', 'Horns, rain and rickshaw bells are on every record.'],
+  ['Night bus home', 'Most of our lyrics were written on the last bus.'],
+  ['Rent day rehearsal', 'We played harder on the days we could not pay.'],
+  ['Songs from the window', 'The street below taught us every rhythm we know.'],
+  ['Everyone writes the chorus', 'A song belongs to the band, not the loudest voice.'],
+  ['Record it before it is perfect', 'The first take keeps the feeling. Fix the rest later.'],
+  ['Turn the street into a drum', 'Every city sound is a beat if you listen long enough.'],
+  ['First gig, eleven people', 'Eleven people came. Nine of them were cousins.'],
+  ['The song the city sang back', 'One night a whole street sang our chorus before we did.'],
+  ['Night rails', ''], ['Six strings', ''], ['The B-side', ''], ['The bass', ''], ['Shohor Lane', ''],
 ];
 
 export async function seed(db, svc, { quiet = false } = {}) {
@@ -105,7 +119,7 @@ export async function seed(db, svc, { quiet = false } = {}) {
   }
 
   // Artist 3: announced, not yet on sale.
-  svc.createArtist({ name: 'Shohor Lane', category: 'Band', isDemo: true, bio: 'Fictional demo band. Five friends, one rented practice room, songs about the city at night.' });
+  svc.createArtist({ name: 'Shohor Lane', category: 'Band', isDemo: true, cards: SHOHOR.map(([title, body]) => ({ title, body })), bio: 'Fictional demo band. Five friends, one rented practice room, songs about the city at night.' });
 
   // Demo artist and sponsor logins linked to their records, so both dashboards can be tried.
   db.run(`INSERT INTO users (name, display_name, email, phone, password_hash, role, kyc_status, artist_id, created_at) VALUES (?,?,?,?,?,?,?,?,?)`,
