@@ -80,12 +80,17 @@ export function createApp(db) {
     try {
       const st = await stat(file);
       if (!st.isFile()) throw new Error('not a file');
+      const ext = extname(file);
+      const type = TYPES[ext] || 'application/octet-stream';
+      // Code and pages are revalidated on every visit so a new deploy shows at once; images may be cached.
+      const etag = `"${st.size.toString(36)}-${Math.round(st.mtimeMs).toString(36)}"`;
+      const headers = {
+        ...SECURITY_HEADERS, 'Content-Type': type, ETag: etag,
+        'Cache-Control': ['.html', '.js', '.css', '.json', '.txt'].includes(ext) ? 'no-cache' : 'public, max-age=86400',
+      };
+      if (req.headers['if-none-match'] === etag) { res.writeHead(304, headers).end(); return; }
       const data = await readFile(file);
-      const type = TYPES[extname(file)] || 'application/octet-stream';
-      res.writeHead(200, {
-        ...SECURITY_HEADERS, 'Content-Type': type,
-        'Cache-Control': extname(file) === '.html' ? 'no-cache' : 'public, max-age=3600',
-      });
+      res.writeHead(200, headers);
       res.end(req.method === 'HEAD' ? undefined : data);
     } catch {
       res.writeHead(404, { ...SECURITY_HEADERS, 'Content-Type': 'text/plain' }).end('Not found');
