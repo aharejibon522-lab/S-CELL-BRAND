@@ -1,5 +1,6 @@
 import { esc, taka, pad2, date, dateTime, api, toast, plate, badges, formData, countdown, THEME_LABEL, STATUS_LABEL, BADGE_LABEL, setCardArt, cardImage } from './ui.js';
 import { mountShelf } from './shelf.js';
+import { mountLivingCard, mountMarquee, mountRevealText, mountStack, mountFadeIns, mountSparkField } from './fx.js';
 import { adminView } from './admin.js';
 import { guidesHub, guidePage, policiesIndex, policyPage, artistDashboard, sponsorDashboard } from './guides.js';
 
@@ -174,15 +175,18 @@ async function home() {
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <p class="kicker">Engraved steel collectibles · খোদাই করা ইস্পাতের সংগ্রহ</p>
-        <h1 class="display"><span>Fifteen.</span><span>One artist.</span><span>Forever.</span></h1>
+        <h1 class="display steel-text"><span>Fifteen.</span><span>One artist.</span><span>Forever.</span></h1>
         <p class="lede">S/CELL engraves an artist's own words and art into 15 numbered steel cards. There will never be a sixteenth. Bid at S/CELL Night, own a verified piece of the story, and trade it on the official market.</p>
         <div class="btn-row">
-          <a class="btn" href="/night">${live && live.status === 'live' ? 'Bid at the live S/CELL Night' : 'See S/CELL Night'}</a>
+          <a class="btn heat" href="/night">${live && live.status === 'live' ? 'Bid at the live S/CELL Night' : 'See S/CELL Night'}</a>
           <a class="btn ghost" href="/collections">Explore the collections</a>
         </div>
       </div>
       <div class="hero-card">
-        ${plate({ ...SAMPLE, title: 'Words are rivers', body: 'They change the land they pass through.', artist: { name: 'Meghla Sultana', slug: 'meghla-sultana' } }, { engrave: true })}
+        <div class="living" id="living">
+          ${plate({ ...SAMPLE, title: 'Words are rivers', body: 'They change the land they pass through.', artist: { name: 'Meghla Sultana', slug: 'meghla-sultana' } })}
+          <p class="living-hint">Grab the card and pull. Steel remembers its shape.</p>
+        </div>
         <div class="structure" aria-label="How the 15 cards are divided">
           <p class="structure-cap">Every collection, the same fifteen</p>
           <div class="structure-row">
@@ -193,6 +197,30 @@ async function home() {
           </div>
           <p class="structure-note">Cards 1–10 carry the artist's words. Cards 11–15 carry the art they chose. Each is one of one.</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  ${marqueeHtml()}
+
+  <section class="manifesto dark-band" aria-labelledby="manifesto-h">
+    ${manifestoCorners()}
+    <div class="wrap manifesto-inner">
+      <h2 class="steel-text big-head" id="manifesto-h" data-fade>Why steel</h2>
+      <p class="reveal-text" id="reveal">A t-shirt fades. A poster tears. A stream disappears from a playlist. S/CELL keeps what makes an artist matter: what they believe, how they work, the nights that changed them and the images they chose. Engraved in steel, numbered one to fifteen, and never made again.</p>
+      <a class="btn heat" href="/how-it-works" data-fade>How S/CELL works</a>
+    </div>
+  </section>
+
+  <section class="nightfield" id="nightfield" aria-label="S/CELL Night">
+    <canvas class="nf-canvas" aria-hidden="true"></canvas>
+    <div class="nf-vignette" aria-hidden="true"></div>
+    <div class="nf-ui">
+      <h2 class="nf-head">Engraved, not printed.</h2>
+      <p class="nf-cap">Fifteen cards. One night.<br>${live && live.status === 'live' ? 'Bidding is open right now.' : 'Bid live at the next S/CELL Night.'}</p>
+      <a class="nf-go" href="/night" aria-label="Go to S/CELL Night"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+      <div class="nf-corner"><span>Scroll to wander</span><i></i>
+        <button class="nf-sound" type="button" aria-pressed="false" aria-label="Ambient sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5Z"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="m16 10 4 4m0-4-4 4"/></svg></button>
       </div>
     </div>
   </section>
@@ -217,25 +245,26 @@ async function home() {
     </div>
   </section>
 
-  <section class="section">
+  <section class="services" aria-labelledby="svc-h">
     <div class="wrap">
-      <h2 class="h2">From an artist's story to your collection</h2>
-      <p class="subtitle">Six steps, and every one of them on the record.</p>
-      <ol class="steps">
-        <li><h3>Collaboration</h3><p>S/CELL works with a living artist on what their 15 cards should say and show.</p></li>
-        <li><h3>Creation</h3><p>Their words and art are laser-engraved into stainless steel and numbered 01 to 15.</p></li>
-        <li><h3>Authentication</h3><p>Every card carries its own chip and a record in the S/CELL registry.</p></li>
-        <li><h3>S/CELL Night</h3><p>The artist plays a short unplugged set, then the cards are auctioned live.</p></li>
-        <li><h3>Ownership</h3><p>Winners receive the card, its certificate and a verified owner account.</p></li>
-        <li><h3>Official resale</h3><p>Owners can resell on the marketplace. The artist earns 13% of every resale up to ৳1 lakh (10% above it), for as long as the card trades.</p></li>
+      <h2 class="big-head ink" id="svc-h" data-fade>How it works</h2>
+      <ol class="svc-list">
+        <li class="svc" data-fade style="--d:0.0s"><span class="svc-n">01</span><div><h3>Collaboration</h3><p>S/CELL works with a living artist on what their 15 cards should say and show.</p></div></li>
+        <li class="svc" data-fade style="--d:0.1s"><span class="svc-n">02</span><div><h3>Creation</h3><p>Their words and art are laser-engraved into stainless steel and numbered 01 to 15.</p></div></li>
+        <li class="svc" data-fade style="--d:0.2s"><span class="svc-n">03</span><div><h3>Authentication</h3><p>Every card carries its own chip and a record in the S/CELL registry.</p></div></li>
+        <li class="svc" data-fade style="--d:0.3s"><span class="svc-n">04</span><div><h3>S/CELL Night</h3><p>The artist plays a short unplugged set, then the cards are auctioned live.</p></div></li>
+        <li class="svc" data-fade style="--d:0.4s"><span class="svc-n">05</span><div><h3>Ownership</h3><p>Winners receive the card, its certificate and a verified owner account.</p></div></li>
+        <li class="svc" data-fade style="--d:0.5s"><span class="svc-n">06</span><div><h3>Official resale</h3><p>Owners can resell on the marketplace. The artist earns 13% of every resale up to ৳1 lakh (10% above it), for as long as the card trades.</p></div></li>
       </ol>
     </div>
   </section>
 
-  <section class="section-tight">
+  <section class="stack-section" aria-labelledby="stack-h">
     <div class="wrap">
-      <div class="night-head" style="margin-bottom:0"><div><h2 class="h2">Collections</h2><p class="subtitle">Each one closed at fifteen, forever.</p></div><a href="/collections">All collections</a></div>
-      <div class="artist-rows">${artists.slice(0, 4).map(artistRow).join('') || '<p class="empty">The first collection is on its way.</p>'}</div>
+      <h2 class="big-head steel-text" id="stack-h" data-fade>Collections</h2>
+      <p class="stack-sub" data-fade>Each one closed at fifteen, forever.</p>
+      <div class="stack" id="stack">${artists.slice(0, 4).map((a, i) => stackCard(a, i)).join('') || '<p class="empty">The first collection is on its way.</p>'}</div>
+      <p class="stack-more"><a class="btn ghost light" href="/collections">All collections</a></p>
     </div>
   </section>
 
@@ -296,6 +325,55 @@ async function home() {
     const startAt = Math.max(0, items.findIndex((i) => i.group === (live?.artist?.name || '')));
     state.cleanups.push(mountShelf(shelfEl, items, { start: startAt + 2, label: 'Featured S/CELL cards' }));
   } else shelfEl.closest('section').remove();
+
+  const living = document.getElementById('living');
+  const livingImg = living?.querySelector('.plate.has-art img');
+  if (livingImg) state.cleanups.push(mountLivingCard(living, livingImg.getAttribute('src')));
+  const mq = document.getElementById('marquee');
+  if (mq) state.cleanups.push(mountMarquee(mq));
+  state.cleanups.push(mountRevealText(document.getElementById('reveal')));
+  const stack = document.getElementById('stack');
+  if (stack?.querySelector('.stack-item')) state.cleanups.push(mountStack(stack));
+  state.cleanups.push(mountSparkField(document.getElementById('nightfield')));
+  state.cleanups.push(mountFadeIns(main));
+}
+
+function artCards(filter) {
+  const out = [];
+  for (const slug of state.config?.cardArt || []) for (let n = 1; n <= 15; n++) if (filter(n)) out.push({ slug, n });
+  return out;
+}
+function marqueeHtml(urls = artCards((n) => n <= 10).map(({ slug, n }) => `/img/cards/${slug}/${pad2(n)}.webp`)) {
+  const land = urls;
+  if (!land.length) return '';
+  const half = Math.ceil(land.length / 2);
+  const row = (list) => [...list, ...list, ...list].map((u) => `<img src="${u}" alt="" loading="lazy" decoding="async" width="420" height="265">`).join('');
+  return `<section class="marquee dark-band" id="marquee" aria-label="Cards from the collections">
+    <div class="mq-row">${row(land.slice(0, half))}</div>
+    <div class="mq-row">${row(land.slice(half))}</div>
+  </section>`;
+}
+function manifestoCorners() {
+  const p = artCards((n) => n >= 11 && n <= 14).filter((_, i) => i % 3 === 0).slice(0, 4);
+  return p.map(({ slug, n }, i) => `<img class="corner-card c${i}" data-fade src="/img/cards/${slug}/${pad2(n)}.webp" alt="" loading="lazy" aria-hidden="true">`).join('');
+}
+function stackCard(a, i) {
+  const statusText = { live: 'S/CELL Night live', upcoming: 'Coming soon', released: 'Released' }[a.status];
+  const art = (state.config?.cardArt || []).includes(a.slug);
+  const img = (n) => `/img/cards/${a.slug}/${pad2(n)}.webp`;
+  return `<div class="stack-item" style="--i:${i}">
+    <article class="stack-card">
+      <header class="stack-top">
+        <span class="stack-n">${pad2(i + 1)}</span>
+        <div class="stack-name"><span class="stack-cat">${esc(a.category)}${a.isDemo ? ' · demo artist' : ''}</span><h3>${esc(a.name)}</h3><span class="stack-status">${statusText} · ${a.cardsOwned} of 15 owned</span></div>
+        <a class="btn ghost light" href="/artists/${esc(a.slug)}">View collection</a>
+      </header>
+      ${art ? `<div class="stack-imgs">
+        <div class="col1"><img src="${img(1)}" alt="" loading="lazy"><img src="${img(9)}" alt="" loading="lazy"></div>
+        <div class="col2"><img src="${img(11)}" alt="" loading="lazy"></div>
+      </div>` : `<p class="stack-bio">${esc(a.bio || '')}</p>`}
+    </article>
+  </div>`;
 }
 
 function cardStatusLine(c) {
@@ -336,11 +414,46 @@ async function conceptPage() {
   main.innerHTML = `
   <section class="concept-banner"><div class="wrap"><p><b>Concept proposal.</b> Not affiliated with or endorsed by the artists named here. Nothing on this page is for sale. Every message on the cards will be written by the artist.</p></div></section>
   <section class="shelf-section" aria-label="Founding Set visuals"><div id="shelf"></div></section>
-  <section class="section-tight"><div class="wrap">
-    <h1 class="h2">The Founding Set</h1>
-    <p class="subtitle">প্রতিষ্ঠার সেট · Three artists, fifteen steel cards each, told as a career.</p>
-    <nav class="concept-tabs" aria-label="Artists">${data.artists.map((a) => `<a href="#c-${a.key}" style="--acc:${a.tint[1]}">${esc(a.name)} <span class="bnin">${esc(a.nameBn)}</span></a>`).join('')}</nav>
-  </div></section>
+  ${marqueeHtml(data.artists.flatMap((a) => a.cards.filter((c) => c.orientation === 'landscape').map((c) => img(a.key, pad2(c.number)))))}
+  <section class="manifesto dark-band concept-intro" aria-labelledby="ci-h">
+    ${data.artists.map((a, i) => `<img class="corner-card c${i}" data-fade src="${img(a.key, i === 0 ? '11' : i === 1 ? '12' : '13')}" alt="" aria-hidden="true">`).join('')}
+    <img class="corner-card c3" data-fade src="${img(data.artists[0].key, '14')}" alt="" aria-hidden="true">
+    <div class="wrap manifesto-inner">
+      <h1 class="steel-text big-head" id="ci-h" data-fade>The Founding Set</h1>
+      <p class="reveal-text" id="reveal">Three artists who shaped Bangla band music, each told in fifteen steel cards. James, the City Bard, in violet. Oni Hasan, six strings abroad, in steel blue. Hamin Ahmed, Miles since 1979, in warm bronze. Every theme, title and drawing here is a proposal for the artist to change, and every message will be written in their own words.</p>
+      <nav class="concept-tabs" aria-label="Artists" data-fade>${data.artists.map((a) => `<a href="#c-${a.key}" style="--acc:${a.tint[2]}">${esc(a.name)} <span class="bnin">${esc(a.nameBn)}</span></a>`).join('')}</nav>
+    </div>
+  </section>
+  <section class="stack-section concept-stack" aria-labelledby="cs-h">
+    <div class="wrap">
+      <h2 class="big-head steel-text" id="cs-h" data-fade>The artists</h2>
+      <p class="stack-sub" data-fade>প্রতিষ্ঠার সেট · Concept proposal, not affiliated or endorsed</p>
+      <div class="stack" id="stack">${data.artists.map((a, i) => `<div class="stack-item" style="--i:${i}">
+        <article class="stack-card" style="border-color:${a.tint[2]}">
+          <header class="stack-top">
+            <span class="stack-n">${pad2(i + 1)}</span>
+            <div class="stack-name"><span class="stack-cat">${esc(a.subtitle)} · <span class="bnin">${esc(a.subtitleBn)}</span></span><h3>${esc(a.name)} · ${esc(a.title)}</h3><span class="stack-status bnin">${esc(a.nameBn)} · ${esc(a.titleBn)}</span></div>
+            <a class="btn ghost light" href="#c-${a.key}">See all 15 cards</a>
+          </header>
+          <div class="stack-imgs">
+            <div class="col1"><img src="${img(a.key, '01')}" alt="" loading="lazy"><img src="${img(a.key, '09')}" alt="" loading="lazy"></div>
+            <div class="col2"><img src="${img(a.key, '15')}" alt="" loading="lazy"></div>
+          </div>
+        </article></div>`).join('')}</div>
+    </div>
+  </section>
+  <section class="nightfield" id="nightfield" aria-label="The Founding Set night">
+    <canvas class="nf-canvas" aria-hidden="true"></canvas>
+    <div class="nf-vignette" aria-hidden="true"></div>
+    <div class="nf-ui">
+      <h2 class="nf-head">Forty-five cards. One night.</h2>
+      <p class="nf-cap">Three artists, one S/CELL Night.<br>Only once they say yes.</p>
+      <a class="nf-go" href="#c-${data.artists[0].key}" aria-label="See the cards"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
+      <div class="nf-corner"><span>Scroll to wander</span><i></i>
+        <button class="nf-sound" type="button" aria-pressed="false" aria-label="Ambient sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18V6L7.5 9.5Z"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="m16 10 4 4m0-4-4 4"/></svg></button>
+      </div>
+    </div>
+  </section>
   ${data.artists.map((a) => `
   <section class="section concept-artist" id="c-${a.key}" style="--acc:${a.tint[1]};--acc2:${a.tint[2]}">
     <div class="wrap">
@@ -369,6 +482,12 @@ async function conceptPage() {
     credit: 'Concept only. Not affiliated with or endorsed by the artist.', href: `#c-${a.key}`, hrefLabel: 'See the full set',
   })));
   state.cleanups.push(mountShelf(document.getElementById('shelf'), items, { start: 2, label: 'Founding Set visual cards', wordLeft: 'প্রতিষ্ঠা', wordRight: 'সেট' }));
+  const mq = document.getElementById('marquee');
+  if (mq) state.cleanups.push(mountMarquee(mq));
+  state.cleanups.push(mountRevealText(document.getElementById('reveal')));
+  state.cleanups.push(mountStack(document.getElementById('stack')));
+  state.cleanups.push(mountSparkField(document.getElementById('nightfield')));
+  state.cleanups.push(mountFadeIns(main));
 }
 
 // ---------- Collections ----------
